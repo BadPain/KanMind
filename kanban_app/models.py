@@ -34,3 +34,12 @@ class Task(models.Model):
         "low", "Low"), ("medium", "Medium"), ("high", "High")])
     status = models.CharField(max_length=20, choices=[(
         "to-do", "To Do"), ("in-progress", "In Progress"), ("done", "Done")])
+
+
+class Comment(models.Model):
+    task = models.ForeignKey(
+        Task, on_delete=models.CASCADE, related_name='comments')
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

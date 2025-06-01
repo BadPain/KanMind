@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Board, Task
-from .serializers import BoardOverviewSerializer, BoardSerializer, TaskSerializer
+from .serializers import BoardOverviewSerializer, BoardSerializer, TaskSerializer, CommentSerializer
 from kanban_app.models import Board
 
 
@@ -22,6 +22,7 @@ class BoardListView(APIView):
             models.Q(owner=user) | models.Q(members=user)).distinct()
         serializer = BoardOverviewSerializer(boards, many=True)
         return Response(serializer.data)
+
 
 class BoardCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -44,6 +45,7 @@ class BoardCreateView(APIView):
             "owner_id": board.owner.id
         }, status=status.HTTP_201_CREATED)
 
+
 class BoardDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -65,6 +67,7 @@ class BoardDetailView(APIView):
         board.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
 class TasksAssignedToMeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -73,7 +76,7 @@ class TasksAssignedToMeView(APIView):
         tasks = Task.objects.filter(assignee=user)
         serializer = TaskSerializer(tasks, many=True)
         return Response(serializer.data)
-    
+
 
 class TaskCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -84,3 +87,85 @@ class TaskCreateView(APIView):
             task = serializer.save(assignee=request.user)
             return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TaskReviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id)
+        if request.user != task.reviewer:
+            return Response({"detail": "You do not have permission to review this task."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_task = serializer.save()
+            return Response(TaskSerializer(updated_task).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TaskEditView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id)
+        if request.user != task.assignee:
+            return Response({"detail": "You do not have permission to edit this task."}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = TaskSerializer(task, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_task = serializer.save()
+            return Response(TaskSerializer(updated_task).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TaskDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id)
+        if request.user != task.assignee:
+            return Response({"detail": "You do not have permission to delete this task."}, status=status.HTTP_403_FORBIDDEN)
+        task.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class TaskCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id)
+        comments = task.comments.all()
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+
+class TaskCreateCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id)
+        comment_text = request.data.get("comment")
+
+        if not comment_text:
+            return Response({"detail": "Comment text is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        task.comments.create(author=request.user, content=comment_text)
+        return Response({"detail": "Comment added successfully."}, status=status.HTTP_201_CREATED)
+
+
+class TaskDeleteCommentView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, task_id, comment_id):
+        task = get_object_or_404(Task, id=task_id)
+        comment = task.comments.filter(id=comment_id).first()
+
+        if not comment:
+            return Response({"detail": "Comment not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != comment.author:
+            return Response({"detail": "You do not have permission to delete this comment."}, status=status.HTTP_403_FORBIDDEN)
+
+        comment.delete()
+        return Response({"detail": "Comment deleted successfully."}, status=status.HTTP_204_NO_CONTENT)

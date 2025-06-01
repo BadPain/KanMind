@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Board, Task
+from .models import Board, Task, Comment
+
 
 class BoardOverviewSerializer(serializers.ModelSerializer):
     member_count = serializers.SerializerMethodField()
@@ -10,7 +11,8 @@ class BoardOverviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ['id', 'title', 'member_count', 'ticket_count', 'tasks_to_do_count', 'tasks_high_prio_count', 'owner_id']
+        fields = ['id', 'title', 'member_count', 'ticket_count',
+                  'tasks_to_do_count', 'tasks_high_prio_count', 'owner_id']
 
     def get_member_count(self, obj):
         return obj.members.count()
@@ -43,8 +45,21 @@ class BoardSerializer(serializers.ModelSerializer):
         if members_data is not None:
             instance.members.set(members_data)
         return instance
-    
+
+
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['assignee'].queryset = self.context.get(
+            'users').all()
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.StringRelatedField()
+    class Meta:
+        model = Comment
+        fields = ['id', 'author', 'content', 'created_at']
