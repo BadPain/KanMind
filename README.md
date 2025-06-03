@@ -84,22 +84,3 @@ You can access the Django admin panel at:
 [http://127.0.0.1:8000/admin](http://127.0.0.1:8000/admin)
 
 ---
-
-## 📁 Project Structure (Simplified)
-
-```
-kanmind/
-├── auth_app/           # Handles user authentication
-├── kanban_app/         # Core Kanban functionality
-├── kanmind/            # Project settings and URLs
-├── templates/          # HTML templates
-├── static/             # Static files (CSS, JS)
-├── manage.py
-└── requirements.txt
-```
-
----
-
-## 📜 License
-
-MIT License. See `LICENSE` file for details.
