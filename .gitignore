@@ -6,6 +6,38 @@
 __pycache__
 db.*
 media
+db.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+
+# Django
+db.sqlite3
+*.pot
+*.pyc
+
+# Environment
+.env
+venv/
+ENV/
+*.env
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# PyCharm
+.idea/
+
+# Migrations (optional)
+*/migrations/__pycache__/
+*/migrations/*.pyc
+*/migrations/*.pyo
 
 # Backup files #
 *.bak
