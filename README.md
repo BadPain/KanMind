@@ -26,7 +26,7 @@
 
 1. **Clone the repository**  
    ```bash
-   git clone https://github.com/your-username/kanmind.git
+   git clone https://github.com/BadPain/kanmind.git
    cd kanmind
    ```
 
