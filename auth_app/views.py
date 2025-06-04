@@ -7,6 +7,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework.permissions import AllowAny
+from .models import CustomUser as User
 
 
 class RegistrationView(APIView):
@@ -56,12 +57,14 @@ class LoginView(APIView):
                 {"error": "Email and password are required."},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
         user = User.objects.filter(email=email).first()
         if user is None or not user.check_password(password):
             return Response(
                 {"error": "Invalid credentials."},
                 status=status.HTTP_401_UNAUTHORIZED
             )
+
         token, created = Token.objects.get_or_create(user=user)
 
         return Response({

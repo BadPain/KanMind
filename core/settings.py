@@ -154,3 +154,6 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
     ]
 }
+
+
+AUTH_USER_MODEL = 'auth_app.CustomUser'

@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import Board, Task, Comment, User
 from django.contrib.auth import get_user_model
+from .models import Board, Task, Comment
+
 User = get_user_model()
 
 

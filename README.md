@@ -67,10 +67,8 @@ You can use the following test user to explore the application:
 
 ```json
 {
-    "token": "9601719904a9b4c793e1d92fa821be858166b8a1",
-    "fullname": "Test User",
-    "email": "test@example.com",
-    "user_id": 2
+  "email": "florian123@example.com",
+  "password": "password123"
 }
 ```
 
