@@ -14,26 +14,21 @@ class RegistrationView(APIView):
 
     def post(self, request):
         data = request.data
-        username = data.get('username')
         fullname = data.get('fullname')
         email = data.get('email')
         password = data.get('password')
         repeated_password = data.get('repeated_password')
 
-        if not username or not fullname or not email or not password or not repeated_password:
+        if not fullname or not email or not password or not repeated_password:
             return Response({"error": "All fields are required."}, status=status.HTTP_400_BAD_REQUEST)
 
         if password != repeated_password:
             return Response({"error": "Passwords do not match."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if User.objects.filter(username=username).exists():
-            return Response({"error": "Username already taken."}, status=status.HTTP_400_BAD_REQUEST)
-
         if User.objects.filter(email=email).exists():
             return Response({"error": "Email already registered."}, status=status.HTTP_400_BAD_REQUEST)
 
         user = User.objects.create_user(
-            username=username,
             email=email,
             password=password,
             first_name=fullname
