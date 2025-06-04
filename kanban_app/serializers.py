@@ -1,5 +1,15 @@
 from rest_framework import serializers
-from .models import Board, Task, Comment
+from .models import Board, Task, Comment, User
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+
+class UserMiniSerializer(serializers.ModelSerializer):
+    fullname = serializers.CharField(source="first_name")
+
+    class Meta:
+        model = User
+        fields = ["id", "email", "fullname"]
 
 
 class BoardOverviewSerializer(serializers.ModelSerializer):
@@ -8,11 +18,18 @@ class BoardOverviewSerializer(serializers.ModelSerializer):
     tasks_to_do_count = serializers.SerializerMethodField()
     tasks_high_prio_count = serializers.SerializerMethodField()
     owner_id = serializers.IntegerField(source='owner.id')
+    owner_data = UserMiniSerializer(source="owner", read_only=True)
+    members_data = UserMiniSerializer(
+        source="members", many=True, read_only=True)
 
     class Meta:
         model = Board
-        fields = ['id', 'title', 'member_count', 'ticket_count',
-                  'tasks_to_do_count', 'tasks_high_prio_count', 'owner_id']
+        fields = [
+            "id", "title",
+            "member_count", "ticket_count",
+            "tasks_to_do_count", "tasks_high_prio_count",
+            "owner_id", "owner_data", "members_data"
+        ]
 
     def get_member_count(self, obj):
         return obj.members.count()
@@ -48,18 +65,24 @@ class BoardSerializer(serializers.ModelSerializer):
 
 
 class TaskSerializer(serializers.ModelSerializer):
+    assignee = UserMiniSerializer(read_only=True)
+    reviewer = UserMiniSerializer(read_only=True)
+    comments_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = [
+            "id", "board", "title", "description", "status", "priority",
+            "assignee", "reviewer", "due_date", "comments_count"
+        ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['assignee'].queryset = self.context.get(
-            'users').all()
+    def get_comments_count(self, obj):
+        return obj.comments.count()
 
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.StringRelatedField()
+
     class Meta:
         model = Comment
         fields = ['id', 'author', 'content', 'created_at']
