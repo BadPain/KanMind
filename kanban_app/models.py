@@ -18,6 +18,7 @@ class Board(models.Model):
 class Task(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
+
     assignee = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -25,6 +26,7 @@ class Task(models.Model):
         blank=True,
         related_name='assigned_tasks'
     )
+
     reviewer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -32,12 +34,15 @@ class Task(models.Model):
         blank=True,
         related_name='reviewed_tasks'
     )
+
     board = models.ForeignKey(
         Board,
         on_delete=models.CASCADE,
         related_name='tasks'
     )
+
     due_date = models.DateField(null=True, blank=True)
+
     priority = models.CharField(
         max_length=20,
         choices=[
@@ -46,6 +51,7 @@ class Task(models.Model):
             ("high", "High")
         ]
     )
+
     status = models.CharField(
         max_length=20,
         choices=[
@@ -56,6 +62,8 @@ class Task(models.Model):
         ]
     )
 
+    def __str__(self):
+        return f"{self.title} ({self.status})"
 
 class Comment(models.Model):
     task = models.ForeignKey(

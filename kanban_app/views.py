@@ -13,22 +13,17 @@ from kanban_app.models import Board
 User = get_user_model()
 
 
-# Ruft alle Boards auf
-class BoardListView(APIView):
+class BoardListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        print(">>> Request User:", user)
         boards = Board.objects.filter(
-            models.Q(owner=user) | models.Q(members=user)).distinct()
-        print(">>> Found Boards:", boards)
-        return Response({"count": boards.count()})
+            models.Q(owner=user) | models.Q(members=user)
+        ).distinct()
 
-
-# Erstellt Board
-class BoardCreateView(APIView):
-    permission_classes = [IsAuthenticated]
+        serializer = BoardSerializer(boards, many=True)
+        return Response(serializer.data)
 
     def post(self, request):
         title = request.data.get("title")
@@ -45,18 +40,10 @@ class BoardCreateView(APIView):
                 id__in=member_ids).exclude(id=user.id)
             board.members.set(members)
 
-        return Response({
-            "id": board.id,
-            "title": board.title,
-            "member_count": board.members.count(),
-            "ticket_count": board.tasks.count(),
-            "tasks_to_do_count": board.tasks.filter(status="to-do").count(),
-            "tasks_high_prio_count": board.tasks.filter(priority="high").count(),
-            "owner_id": board.owner.id
-        }, status=status.HTTP_201_CREATED)
+        serializer = BoardSerializer(board)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# Ruft Board mit ID auf
 class BoardDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -114,16 +101,11 @@ class TaskCreateView(APIView):
 class TaskReviewView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, task_id):
-        task = get_object_or_404(Task, id=task_id)
-        if request.user != task.reviewer:
-            return Response({"detail": "You do not have permission to review this task."}, status=status.HTTP_403_FORBIDDEN)
-
-        serializer = TaskSerializer(task, data=request.data, partial=True)
-        if serializer.is_valid():
-            updated_task = serializer.save()
-            return Response(TaskSerializer(updated_task).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get(self, request):
+        user = request.user
+        tasks = Task.objects.filter(reviewer=user)
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
 
 
 class TaskDetailView(APIView):
