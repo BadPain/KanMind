@@ -69,7 +69,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_reviewer(self, obj):
         if obj.reviewer is None:
-            return []
+            return {}
         return [UserMiniSerializer(obj.reviewer).data]
 
     def get_comments_count(self, obj):
