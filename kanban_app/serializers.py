@@ -14,42 +14,19 @@ class UserMiniSerializer(serializers.ModelSerializer):
 
 
 class BoardOverviewSerializer(serializers.ModelSerializer):
-    member_count = serializers.SerializerMethodField()
-    ticket_count = serializers.SerializerMethodField()
-    tasks_to_do_count = serializers.SerializerMethodField()
-    tasks_high_prio_count = serializers.SerializerMethodField()
     owner_id = serializers.IntegerField(source='owner.id')
     owner_data = UserMiniSerializer(source="owner", read_only=True)
-    members_data = UserMiniSerializer(
-        source="members", many=True, read_only=True)
+    members = UserMiniSerializer("members", many=True, read_only=True)
 
     class Meta:
         model = Board
         fields = [
             "id", "title",
-            "member_count", "ticket_count",
-            "tasks_to_do_count", "tasks_high_prio_count",
-            "owner_id", "owner_data", "members_data"
+            "owner_id", "owner_data", "members"
         ]
-
-    def get_member_count(self, obj):
-        return obj.members.count()
-
-    def get_ticket_count(self, obj):
-        return obj.tasks.count()
-
-    def get_tasks_to_do_count(self, obj):
-        return obj.tasks.filter(status='to-do').count()
-
-    def get_tasks_high_prio_count(self, obj):
-        return obj.tasks.filter(priority='high').count()
 
 
 class BoardSerializer(serializers.ModelSerializer):
-    member_count = serializers.SerializerMethodField()
-    ticket_count = serializers.SerializerMethodField()
-    tasks_to_do_count = serializers.SerializerMethodField()
-    tasks_high_prio_count = serializers.SerializerMethodField()
     owner_id = serializers.IntegerField(source="owner.id", read_only=True)
 
     class Meta:
@@ -57,24 +34,17 @@ class BoardSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
-            "member_count",
-            "ticket_count",
-            "tasks_to_do_count",
-            "tasks_high_prio_count",
             "owner_id",
         ]
 
-    def get_member_count(self, obj):
-        return obj.members.count()
 
-    def get_ticket_count(self, obj):
-        return obj.tasks.count()
+class BoardUpdateResponseSerializer(serializers.ModelSerializer):
+    owner_data = UserMiniSerializer(source="owner", read_only=True)
+    members = UserMiniSerializer("members", many=True, read_only=True)
 
-    def get_tasks_to_do_count(self, obj):
-        return obj.tasks.filter(status="to-do").count()
-
-    def get_tasks_high_prio_count(self, obj):
-        return obj.tasks.filter(priority="high").count()
+    class Meta:
+        model = Board
+        fields = ["id", "title", "owner_data", "members"]
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -104,7 +74,6 @@ class TaskSerializer(serializers.ModelSerializer):
 
     def get_comments_count(self, obj):
         return obj.comments.count()
-
 
 
 class CommentSerializer(serializers.ModelSerializer):

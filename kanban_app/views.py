@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Board, Task
-from .serializers import BoardOverviewSerializer, BoardSerializer, TaskSerializer, CommentSerializer
+from .serializers import BoardOverviewSerializer, BoardSerializer, TaskSerializer, CommentSerializer, BoardUpdateResponseSerializer
 from kanban_app.models import Board
 
 
@@ -66,7 +66,7 @@ class BoardDetailView(APIView):
         serializer = BoardSerializer(board, data=request.data, partial=True)
         if serializer.is_valid():
             updated_board = serializer.save()
-            return Response(BoardOverviewSerializer(updated_board).data)
+            return Response(BoardUpdateResponseSerializer(updated_board).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, board_id):
