@@ -62,7 +62,7 @@ class LoginView(APIView):
         if user is None or not user.check_password(password):
             return Response(
                 {"error": "Invalid credentials."},
-                status=status.HTTP_401_UNAUTHORIZED
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         token, created = Token.objects.get_or_create(user=user)
