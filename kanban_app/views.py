@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Board, Task
-from .serializers import BoardOverviewSerializer, BoardSerializer, TaskSerializer, CommentSerializer, BoardUpdateResponseSerializer
+from .serializers import BoardOverviewSerializer, BoardSerializer, TaskSerializer, CommentSerializer, TaskCreateSerializer, BoardUpdateResponseSerializer, BoardPostSerializer
 from kanban_app.models import Board
 
 
@@ -40,7 +40,9 @@ class BoardListCreateView(APIView):
                 id__in=member_ids).exclude(id=user.id)
             board.members.set(members)
 
-        serializer = BoardSerializer(board)
+        board.members.add(user)
+
+        serializer = BoardPostSerializer(board)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -91,10 +93,10 @@ class TaskCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = TaskSerializer(data=request.data)
+        serializer = TaskCreateSerializer(data=request.data)
         if serializer.is_valid():
             task = serializer.save(assignee=request.user)
-            return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
+            return Response(TaskCreateSerializer(task).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
