@@ -59,11 +59,12 @@ class BoardPostSerializer(serializers.ModelSerializer):
 
 class BoardUpdateResponseSerializer(serializers.ModelSerializer):
     owner_data = UserMiniSerializer(source="owner", read_only=True)
-    members = UserMiniSerializer("members", many=True, read_only=True)
+    members_data = UserMiniSerializer(
+        source="members", many=True, read_only=True)
 
     class Meta:
         model = Board
-        fields = ["id", "title", "owner_data", "members"]
+        fields = ["id", "title", "owner_data", "members_data"]
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -118,8 +119,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     def get_reviewer(self, obj):
         reviewer = obj.reviewer or (obj.board.owner if obj.board else None)
         if reviewer is None:
-            return []
-        return [UserMiniSerializer(reviewer).data]
+            return None
+        return UserMiniSerializer(reviewer).data
 
     def get_comments_count(self, obj):
         return obj.comments.count()
@@ -148,6 +149,41 @@ class TaskBoardSerializer(serializers.ModelSerializer):
         if obj.reviewer is None:
             return {}
         return [UserMiniSerializer(obj.reviewer).data]
+
+    def get_comments_count(self, obj):
+        return obj.comments.count()
+
+
+class TaskPatchSerializer(serializers.ModelSerializer):
+    assignee = UserMiniSerializer(read_only=True)
+    reviewer = serializers.SerializerMethodField()
+    comments_count = serializers.SerializerMethodField()
+    reviewer_id = serializers.PrimaryKeyRelatedField(
+        source="reviewer",
+        queryset=User.objects.all(),
+        write_only=True
+    )
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "board",
+            "title",
+            "description",
+            "status",
+            "priority",
+            "assignee",
+            "reviewer",
+            "reviewer_id",
+            "due_date",
+            "comments_count"
+        ]
+
+    def get_reviewer(self, obj):
+        if obj.reviewer is None:
+            return None
+        return UserMiniSerializer(obj.reviewer).data
 
     def get_comments_count(self, obj):
         return obj.comments.count()

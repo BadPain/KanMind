@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from .models import Board, Task
-from .serializers import BoardOverviewSerializer, BoardSerializer, TaskSerializer, CommentSerializer, TaskCreateSerializer, BoardUpdateResponseSerializer, BoardPostSerializer
+from .serializers import BoardOverviewSerializer,TaskPatchSerializer, BoardSerializer, TaskSerializer, CommentSerializer, TaskCreateSerializer, BoardUpdateResponseSerializer, BoardPostSerializer
 from kanban_app.models import Board
 
 
@@ -118,11 +118,11 @@ class TaskDetailView(APIView):
         if request.user != task.assignee:
             return Response({"detail": "You do not have permission to edit this task."}, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = TaskSerializer(
+        serializer = TaskPatchSerializer(
             task, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             updated_task = serializer.save()
-            response_serializer = TaskSerializer(
+            response_serializer = TaskPatchSerializer(
                 updated_task, context={'request': request})
             return Response(response_serializer.data, status=status.HTTP_200_OK)
 
